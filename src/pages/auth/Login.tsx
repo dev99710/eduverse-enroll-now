@@ -1,12 +1,12 @@
 
 import PageLayout from "@/components/layout/PageLayout";
-import LoginForm from "@/components/auth/LoginForm";
+import AuthTabs from "@/components/auth/AuthTabs";
 
 const Login = () => {
   return (
     <PageLayout>
       <div className="flex min-h-screen items-center justify-center py-12">
-        <LoginForm />
+        <AuthTabs />
       </div>
     </PageLayout>
   );

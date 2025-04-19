@@ -1,11 +1,12 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const RegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -13,16 +14,17 @@ const RegisterForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "student"
+    role: "student" as "student" | "teacher"
   });
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleRoleChange = (value: string) => {
+  const handleRoleChange = (value: "student" | "teacher") => {
     setFormData(prev => ({ ...prev, role: value }));
   };
 
@@ -48,33 +50,52 @@ const RegisterForm = () => {
     setIsLoading(true);
     
     try {
-      // This would be replaced with actual API call in a real app
-      // Simulating API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success message
-      toast.success("Registration successful! You can now log in.");
-      
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        role: "student"
+      const { data: { user }, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name,
+            role: formData.role
+          }
+        }
       });
-    } catch (error) {
-      toast.error("Registration failed. Please try again.");
+
+      if (error) throw error;
+
+      if (user) {
+        toast.success("Registration successful! You can now log in.");
+        navigate("/auth/login");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-md w-full">
+    <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Create an account</h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <RadioGroup 
+            value={formData.role} 
+            onValueChange={handleRoleChange}
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="student" id="register-student" />
+              <Label htmlFor="register-student">Student</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="teacher" id="register-teacher" />
+              <Label htmlFor="register-teacher">Teacher</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="name">Full Name</Label>
           <Input 
@@ -84,7 +105,6 @@ const RegisterForm = () => {
             placeholder="John Doe"
             value={formData.name}
             onChange={handleChange}
-            autoComplete="name"
             required
           />
         </div>
@@ -98,7 +118,6 @@ const RegisterForm = () => {
             placeholder="john@example.com"
             value={formData.email}
             onChange={handleChange}
-            autoComplete="email"
             required
           />
         </div>
@@ -112,7 +131,6 @@ const RegisterForm = () => {
             placeholder="••••••••"
             value={formData.password}
             onChange={handleChange}
-            autoComplete="new-password"
             required
             minLength={8}
           />
@@ -127,27 +145,8 @@ const RegisterForm = () => {
             placeholder="••••••••"
             value={formData.confirmPassword}
             onChange={handleChange}
-            autoComplete="new-password"
             required
           />
-        </div>
-        
-        <div className="space-y-2">
-          <Label>I am a:</Label>
-          <RadioGroup 
-            value={formData.role} 
-            onValueChange={handleRoleChange}
-            className="flex space-x-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="student" id="student" />
-              <Label htmlFor="student">Student</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="teacher" id="teacher" />
-              <Label htmlFor="teacher">Teacher</Label>
-            </div>
-          </RadioGroup>
         </div>
         
         <Button 
@@ -158,15 +157,6 @@ const RegisterForm = () => {
           {isLoading ? "Creating Account..." : "Register"}
         </Button>
       </form>
-      
-      <div className="mt-6 text-center text-sm">
-        <p className="text-gray-600 dark:text-gray-400">
-          Already have an account?{" "}
-          <Link to="/auth/login" className="text-eduPurple-500 hover:underline">
-            Log in
-          </Link>
-        </p>
-      </div>
     </div>
   );
 };
