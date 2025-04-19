@@ -1,56 +1,115 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import PageLayout from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getDetailedCourse, DetailedCourseData } from "@/lib/mockData";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  level: string;
+  thumbnail: string;
+  video_url: string | null;
+  instructor_id: string;
+  instructor: {
+    full_name: string;
+  };
+  objectives: string[];
+  syllabus: { title: string; description: string; }[];
+}
 
 const CourseDetails = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const [course, setCourse] = useState<DetailedCourseData | null>(null);
+  const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
-    // Simulate API call
-    const fetchCourse = async () => {
-      setLoading(true);
+    const fetchCourseAndEnrollment = async () => {
+      if (!courseId) return;
+      
       try {
-        // Small delay to simulate network request
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        if (!courseId) {
-          throw new Error("Course ID is required");
+        // Get current user
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate('/auth/login');
+          return;
         }
+
+        // Get user role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
         
-        const courseData = getDetailedCourse(courseId);
-        if (!courseData) {
-          throw new Error("Course not found");
-        }
-        
+        setUserRole(profile?.role || null);
+
+        // Fetch course details
+        const { data: courseData, error: courseError } = await supabase
+          .from('courses')
+          .select(`
+            *,
+            instructor:profiles!courses_instructor_id_fkey(full_name)
+          `)
+          .eq('id', courseId)
+          .single();
+
+        if (courseError) throw courseError;
         setCourse(courseData);
+
+        // Check if user is enrolled
+        const { data: enrollment } = await supabase
+          .from('enrollments')
+          .select('id')
+          .eq('course_id', courseId)
+          .eq('student_id', session.user.id)
+          .single();
+
+        setIsEnrolled(!!enrollment);
       } catch (error) {
-        console.error("Failed to fetch course:", error);
+        console.error("Error fetching course:", error);
         toast.error("Failed to load course details");
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchCourse();
-  }, [courseId]);
+
+    fetchCourseAndEnrollment();
+  }, [courseId, navigate]);
 
   const handleEnroll = async () => {
-    setEnrolling(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth/login');
+        return;
+      }
+
+      setEnrolling(true);
+      
+      const { error } = await supabase
+        .from('enrollments')
+        .insert({
+          course_id: courseId,
+          student_id: session.user.id
+        });
+
+      if (error) throw error;
+
+      setIsEnrolled(true);
       toast.success("Successfully enrolled in course!");
-      // In a real app, we would update the user's enrolled courses
     } catch (error) {
+      console.error("Error enrolling:", error);
       toast.error("Failed to enroll in course");
     } finally {
       setEnrolling(false);
@@ -115,25 +174,30 @@ const CourseDetails = () => {
           <div className="md:w-1/3 bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
             <div className="h-48 overflow-hidden">
               <img 
-                src={course.thumbnail} 
-                alt={`${course.title} thumbnail`} 
+                src={course?.thumbnail} 
+                alt={`${course?.title} thumbnail`} 
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="p-6">
-              <div className="mb-4">
-                <p className="text-2xl font-bold">${course.price.toFixed(2)}</p>
-              </div>
-              <Button 
-                onClick={handleEnroll} 
-                disabled={enrolling} 
-                className="w-full bg-eduOrange-500 hover:bg-eduOrange-500/90 mb-4"
-              >
-                {enrolling ? "Enrolling..." : "Enroll Now"}
-              </Button>
-              <p className="text-sm text-gray-500 text-center">
-                30-day money-back guarantee
-              </p>
+              {userRole === 'student' && (
+                <Button 
+                  onClick={handleEnroll} 
+                  disabled={enrolling || isEnrolled} 
+                  className="w-full bg-eduOrange-500 hover:bg-eduOrange-500/90 mb-4"
+                >
+                  {enrolling ? "Enrolling..." : isEnrolled ? "Enrolled" : "Enroll Now"}
+                </Button>
+              )}
+              {userRole === 'teacher' && course?.instructor_id === (supabase.auth.getUser()?.data?.user?.id) && (
+                <Button 
+                  variant="outline" 
+                  className="w-full mb-4"
+                  onClick={() => navigate(`/courses/${courseId}/edit`)}
+                >
+                  Edit Course
+                </Button>
+              )}
             </div>
           </div>
         </div>

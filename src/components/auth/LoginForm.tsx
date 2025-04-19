@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -12,7 +13,6 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Mock login process
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -24,22 +24,38 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // In a real app, we would set auth state based on API response
-      // For demo, we'll just check for teacher/student emails
-      if (email.includes("teacher")) {
-        // Redirect to teacher dashboard
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      if (!user) {
+        toast.error("Login failed. Please check your credentials.");
+        return;
+      }
+
+      // Fetch user profile to determine role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role === 'teacher') {
         toast.success("Logged in as Teacher");
         navigate("/teacher-dashboard");
       } else {
-        // Redirect to student dashboard
         toast.success("Logged in as Student");
         navigate("/student-dashboard");
       }
     } catch (error) {
-      toast.error("Login failed. Please check your credentials.");
+      toast.error("An error occurred during login");
+      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -91,35 +107,6 @@ const LoginForm = () => {
         >
           {isLoading ? "Signing in..." : "Sign In"}
         </Button>
-
-        <div className="flex items-center text-center my-4">
-          <hr className="flex-grow border-gray-300" />
-          <span className="px-4 text-sm text-gray-500">Demonstration</span>
-          <hr className="flex-grow border-gray-300" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => {
-              setEmail("student@example.com");
-              setPassword("password");
-            }}
-          >
-            Demo Student
-          </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => {
-              setEmail("teacher@example.com");
-              setPassword("password");
-            }}
-          >
-            Demo Teacher
-          </Button>
-        </div>
       </form>
       
       <div className="mt-6 text-center text-sm">
