@@ -34,6 +34,7 @@ const CourseDetails = () => {
   const [enrolling, setEnrolling] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -47,6 +48,8 @@ const CourseDetails = () => {
           navigate('/auth/login');
           return;
         }
+
+        setCurrentUserId(session.user.id);
 
         // Get user role
         const { data: profile } = await supabase
@@ -69,9 +72,15 @@ const CourseDetails = () => {
 
         if (courseError) throw courseError;
 
+        // Handle potential instructor data error
+        const instructorData = courseData.instructor && typeof courseData.instructor === 'object' && !('error' in courseData.instructor) 
+          ? courseData.instructor 
+          : { full_name: 'Unknown Instructor' };
+
         // Set default values for objectives and syllabus
         const courseWithDefaults: Course = {
           ...courseData,
+          instructor: instructorData,
           objectives: [
             "Understand core concepts of the subject",
             "Apply knowledge to real-world scenarios",
@@ -225,7 +234,7 @@ const CourseDetails = () => {
                   {enrolling ? "Enrolling..." : isEnrolled ? "Enrolled" : "Enroll Now"}
                 </Button>
               )}
-              {userRole === 'teacher' && course.instructor_id === supabase.auth.getUser().then(response => response?.data?.user?.id) && (
+              {userRole === 'teacher' && course.instructor_id === currentUserId && (
                 <Button 
                   variant="outline" 
                   className="w-full mb-4"
@@ -328,7 +337,7 @@ const CourseDetails = () => {
           </p>
           <Button 
             onClick={handleEnroll} 
-            disabled={enrolling} 
+            disabled={enrolling || isEnrolled} 
             size="lg"
             className="bg-eduOrange-500 hover:bg-eduOrange-500/90"
           >
