@@ -33,7 +33,7 @@ const CourseGrid = ({ courses }: CourseGridProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <div>
           <Input
             placeholder="Search courses..."
@@ -75,7 +75,7 @@ const CourseGrid = ({ courses }: CourseGridProps) => {
           <p className="text-xl text-gray-500">No courses match your search criteria.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredCourses.map(course => (
             <CourseCard key={course.id} course={course} />
           ))}

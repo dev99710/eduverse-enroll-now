@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Menu, X, User, BookOpen } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Menu, X, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Navbar = () => {
@@ -30,7 +30,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14 md:h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <BookOpen className="h-8 w-8 text-eduPurple-500" />
@@ -55,27 +55,18 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <Button onClick={handleLogout} variant="outline" className="ml-4">
+                <Button onClick={handleLogout} className="ml-4 bg-transparent border border-gray-200 text-gray-700 hover:bg-gray-100">
                   Logout
                 </Button>
               </>
             ) : (
               <>
                 <Link to="/auth/login">
-                  <Button variant="ghost">Login</Button>
+                  <Button className="bg-transparent hover:bg-gray-100 text-gray-700">Login</Button>
                 </Link>
                 <Link to="/auth/register">
                   <Button>Register</Button>
                 </Link>
-                {/* Demo login buttons - for demonstration only */}
-                <div className="ml-4 flex space-x-2">
-                  <Button size="sm" variant="secondary" onClick={() => handleDemoLogin('student')}>
-                    Demo Student
-                  </Button>
-                  <Button size="sm" variant="secondary" onClick={() => handleDemoLogin('teacher')}>
-                    Demo Teacher
-                  </Button>
-                </div>
               </>
             )}
           </div>
@@ -91,8 +82,8 @@ const Navbar = () => {
       
       {/* Mobile Navigation Menu */}
       <div className={cn(
-        "md:hidden",
-        isMenuOpen ? "block animate-fade-in" : "hidden"
+        "md:hidden fixed left-0 right-0 z-40 bg-white dark:bg-gray-900 shadow-lg transition-all duration-300 ease-in-out",
+        isMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
       )}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-gray-900 shadow-lg">
           <Link to="/" 

@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import PageLayout from "@/components/layout/PageLayout";
@@ -16,15 +15,15 @@ const Index = () => {
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-eduBlue-800 to-eduPurple-800 opacity-90"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <div className="md:w-2/3">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-32">
+          <div className="w-full md:w-2/3">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
               Unlock your learning potential with EduVerse
             </h1>
-            <p className="text-xl mb-8 text-gray-100">
+            <p className="text-lg md:text-xl mb-6 md:mb-8 text-gray-100">
               Connect with expert teachers and access quality courses to advance your skills and knowledge.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-3 md:gap-4">
               <Link to="/courses">
                 <Button size="lg" className="bg-eduOrange-500 hover:bg-eduOrange-500/90 text-white font-medium">
                   Explore Courses
@@ -41,7 +40,7 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-12 md:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900">Why Choose EduVerse?</h2>
@@ -92,7 +91,7 @@ const Index = () => {
       </section>
 
       {/* Featured Courses Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-12 md:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900">Featured Courses</h2>
@@ -112,7 +111,7 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-eduPurple-800 text-white">
+      <section className="py-12 md:py-20 bg-eduPurple-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to start your learning journey?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
