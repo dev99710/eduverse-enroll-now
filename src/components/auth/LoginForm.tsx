@@ -26,14 +26,11 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
+      // The error was here - we were incorrectly using 'data' property in the options
+      // The correct way is to sign in without setting role in options
       const { data: { user }, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
-        options: {
-          data: {
-            role: role // Include role in user metadata
-          }
-        }
+        password
       });
 
       if (error) {
