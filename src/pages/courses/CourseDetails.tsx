@@ -11,15 +11,18 @@ import { supabase } from "@/integrations/supabase/client";
 interface Course {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   category: string;
   level: string;
-  thumbnail: string;
+  thumbnail: string | null;
   video_url: string | null;
   instructor_id: string;
+  created_at: string | null;
+  updated_at: string | null;
   instructor: {
-    full_name: string;
+    full_name: string | null;
   };
+  // Add default values for objectives and syllabus
   objectives: string[];
   syllabus: { title: string; description: string; }[];
 }
@@ -59,13 +62,43 @@ const CourseDetails = () => {
           .from('courses')
           .select(`
             *,
-            instructor:profiles!courses_instructor_id_fkey(full_name)
+            instructor:profiles(full_name)
           `)
           .eq('id', courseId)
           .single();
 
         if (courseError) throw courseError;
-        setCourse(courseData);
+
+        // Set default values for objectives and syllabus
+        const courseWithDefaults: Course = {
+          ...courseData,
+          objectives: [
+            "Understand core concepts of the subject",
+            "Apply knowledge to real-world scenarios",
+            "Master essential techniques and methods",
+            "Build practical projects to demonstrate skills"
+          ],
+          syllabus: [
+            {
+              title: "Introduction to the course",
+              description: "Overview of the course structure and core concepts."
+            },
+            {
+              title: "Fundamentals",
+              description: "Learning the basic principles and techniques."
+            },
+            {
+              title: "Advanced Concepts",
+              description: "Diving deep into complex areas and specialized topics."
+            },
+            {
+              title: "Practical Application",
+              description: "Applying knowledge to real-world scenarios and projects."
+            }
+          ]
+        };
+        
+        setCourse(courseWithDefaults);
 
         // Check if user is enrolled
         const { data: enrollment } = await supabase
@@ -166,16 +199,19 @@ const CourseDetails = () => {
             <h1 className="text-3xl md:text-4xl font-bold mb-4">{course.title}</h1>
             <p className="text-xl text-gray-600 mb-4">{course.description}</p>
             <div className="mb-6">
-              <p className="text-sm text-gray-500">Created by <span className="text-eduBlue-600">{course.instructor}</span></p>
-              <p className="text-sm text-gray-500">{course.duration} • {course.enrolledCount} students enrolled</p>
+              <p className="text-sm text-gray-500">Created by <span className="text-eduBlue-600">{course.instructor.full_name}</span></p>
+              <p className="text-sm text-gray-500">
+                {new Date(course.created_at || '').toLocaleDateString()} • 
+                {isEnrolled ? ' You are enrolled' : ' Enroll to access content'}
+              </p>
             </div>
           </div>
           
           <div className="md:w-1/3 bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
             <div className="h-48 overflow-hidden">
               <img 
-                src={course?.thumbnail} 
-                alt={`${course?.title} thumbnail`} 
+                src={course.thumbnail || 'https://via.placeholder.com/800x450?text=No+Thumbnail'} 
+                alt={`${course.title} thumbnail`} 
                 className="w-full h-full object-cover"
               />
             </div>
@@ -189,7 +225,7 @@ const CourseDetails = () => {
                   {enrolling ? "Enrolling..." : isEnrolled ? "Enrolled" : "Enroll Now"}
                 </Button>
               )}
-              {userRole === 'teacher' && course?.instructor_id === (supabase.auth.getUser()?.data?.user?.id) && (
+              {userRole === 'teacher' && course.instructor_id === supabase.auth.getUser().then(response => response?.data?.user?.id) && (
                 <Button 
                   variant="outline" 
                   className="w-full mb-4"
@@ -225,14 +261,14 @@ const CourseDetails = () => {
               </ul>
             </div>
             
-            {course.videoUrl && (
+            {course.video_url && (
               <div className="mb-8">
                 <h2 className="text-2xl font-bold mb-4">Course Preview</h2>
                 <div className="aspect-video overflow-hidden rounded-lg">
                   <iframe 
                     width="100%" 
                     height="100%" 
-                    src={course.videoUrl} 
+                    src={course.video_url} 
                     title="Course Preview"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
@@ -267,12 +303,12 @@ const CourseDetails = () => {
               <div className="w-24 h-24 rounded-full overflow-hidden">
                 <img 
                   src="https://randomuser.me/api/portraits/men/32.jpg"
-                  alt={`${course.instructor} profile`}
+                  alt={`${course.instructor.full_name} profile`}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <h2 className="text-2xl font-bold mb-2">{course.instructor}</h2>
+                <h2 className="text-2xl font-bold mb-2">{course.instructor.full_name}</h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">Expert in {course.category}</p>
                 <p className="text-gray-700 dark:text-gray-200">
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, 
