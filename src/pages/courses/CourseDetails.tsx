@@ -73,8 +73,8 @@ const CourseDetails = () => {
         if (courseError) throw courseError;
 
         // Handle potential instructor data error
-        const instructorData = courseData.instructor && typeof courseData.instructor === 'object' && !('error' in courseData.instructor) 
-          ? courseData.instructor 
+        const instructorData = courseData.instructor && typeof courseData.instructor === 'object' 
+          ? { full_name: (courseData.instructor as any)?.full_name || 'Unknown Instructor' }
           : { full_name: 'Unknown Instructor' };
 
         // Set default values for objectives and syllabus
