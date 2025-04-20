@@ -26,8 +26,12 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    setIsMenuOpen(false);
+    try {
+      await signOut();
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
   
   // Get user initials for avatar fallback
@@ -193,17 +197,7 @@ const Navbar = () => {
               >
                 Register
               </Link>
-              {/* Demo login buttons - for demonstration only */}
-              <div className="pt-2 pb-3 space-y-1">
-                <button onClick={() => handleDemoLogin('student')}
-                  className="w-full text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 block px-3 py-2 rounded-md text-base font-medium">
-                  Demo Student Login
-                </button>
-                <button onClick={() => handleDemoLogin('teacher')}
-                  className="w-full text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 block px-3 py-2 rounded-md text-base font-medium">
-                  Demo Teacher Login
-                </button>
-              </div>
+              {/* Login/Register buttons */}
             </>
           )}
         </div>

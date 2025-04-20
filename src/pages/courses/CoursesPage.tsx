@@ -1,4 +1,5 @@
 
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import PageLayout from "@/components/layout/PageLayout";
 import CourseGrid from "@/components/courses/CourseGrid";
@@ -63,9 +64,11 @@ const CoursesPage = () => {
                   <p className="text-sm text-gray-600 mb-4 line-clamp-2">{course.description}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">{course.enrolledCount} students</span>
-                    <Button size="sm" className="bg-eduBlue-600 hover:bg-eduBlue-700">
-                      View Course
-                    </Button>
+                    <Link to={`/courses/${course.id}`}>
+                      <Button size="sm" className="bg-eduBlue-600 hover:bg-eduBlue-700">
+                        View Course
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>
