@@ -29,11 +29,6 @@ const Index = () => {
                   Explore Courses
                 </Button>
               </Link>
-              <Link to="/auth/register">
-                <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10">
-                  Join as Teacher
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
@@ -124,7 +119,7 @@ const Index = () => {
               </Button>
             </Link>
             <Link to="/courses">
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="bg-white text-eduPurple-800 hover:bg-gray-100">
                 Browse Courses
               </Button>
             </Link>

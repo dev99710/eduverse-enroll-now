@@ -8,19 +8,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { CourseData } from "@/components/courses/CourseCard";
 import { getTeacherCourses, mockUsers, getEnrolledStudents } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
 
 const TeacherDashboard = () => {
-  // For demo, we'll use the first teacher in our mock data
   const teacherId = mockUsers.teachers[0].id;
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check authenticated user's role
+    const checkRole = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth/login");
+        return;
+      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      if (profile?.role !== 'teacher') {
+        navigate("/auth/login");
+        return;
+      }
+      setUserRole(profile.role);
+    };
+    checkRole();
+  }, [navigate]);
+
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 800));
         const teacherCourses = getTeacherCourses(teacherId);
         setCourses(teacherCourses);
@@ -30,15 +52,13 @@ const TeacherDashboard = () => {
         setLoading(false);
       }
     };
-    
     fetchCourses();
   }, [teacherId]);
-  
+
   const handleCreateCourse = () => {
-    // In a real app, we would navigate to a course creation page
     navigate('/create-course');
   };
-  
+
   return (
     <PageLayout>
       <div className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,7 +71,6 @@ const TeacherDashboard = () => {
             Create New Course
           </Button>
         </div>
-        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <Card>
             <CardHeader className="pb-2">
@@ -62,7 +81,6 @@ const TeacherDashboard = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl">
-                {/* Calculate total students across all courses */}
                 {courses.reduce((total, course) => total + (course.enrolledCount || 0), 0)}
               </CardTitle>
               <CardDescription>Total Enrolled Students</CardDescription>
@@ -71,7 +89,6 @@ const TeacherDashboard = () => {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-2xl">
-                {/* Calculate average students per course */}
                 {courses.length > 0 
                   ? Math.round(courses.reduce((total, course) => total + (course.enrolledCount || 0), 0) / courses.length) 
                   : 0}
@@ -80,13 +97,11 @@ const TeacherDashboard = () => {
             </CardHeader>
           </Card>
         </div>
-        
         <Tabs defaultValue="my-courses">
           <TabsList className="mb-8">
             <TabsTrigger value="my-courses">My Courses</TabsTrigger>
             <TabsTrigger value="students">Enrolled Students</TabsTrigger>
           </TabsList>
-          
           <TabsContent value="my-courses">
             {loading ? (
               <div className="text-center py-12">
@@ -137,7 +152,6 @@ const TeacherDashboard = () => {
               </div>
             )}
           </TabsContent>
-          
           <TabsContent value="students">
             {loading ? (
               <div className="text-center py-12">
@@ -152,9 +166,7 @@ const TeacherDashboard = () => {
             ) : (
               <div className="space-y-8">
                 {courses.map(course => {
-                  // Get enrolled students for this course
                   const students = getEnrolledStudents(course.id);
-                  
                   return (
                     <Card key={course.id}>
                       <CardHeader>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -14,6 +14,8 @@ const LoginForm = () => {
   const [role, setRole] = useState<"student" | "teacher">("student");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,40 +28,10 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      // The error was here - we were incorrectly using 'data' property in the options
-      // The correct way is to sign in without setting role in options
-      const { data: { user }, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      if (!user) {
-        toast.error("Login failed. Please check your credentials.");
-        return;
-      }
-
-      // Fetch user profile to determine role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.role !== role) {
-        toast.error(`Invalid login. Please use the correct ${role} login form.`);
-        await supabase.auth.signOut();
-        return;
-      }
-
-      toast.success(`Logged in as ${role}`);
-      navigate(role === 'teacher' ? "/teacher-dashboard" : "/student-dashboard");
+      await signIn(email, password, role);
+      // Navigation is handled in the signIn function
     } catch (error) {
-      toast.error("An error occurred during login");
+      // Error handling is done in the signIn function
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);

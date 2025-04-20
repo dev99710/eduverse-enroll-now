@@ -2,30 +2,45 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Menu, X, BookOpen } from 'lucide-react';
+import { Menu, X, BookOpen, User, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // This would come from auth context in a real app
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<'student' | 'teacher' | null>(null);
+  const { user, profile, signOut } = useAuth();
+  const isLoggedIn = !!user;
+  const userRole = profile?.role || null;
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // For demonstration purposes only
-  const handleDemoLogin = (role: 'student' | 'teacher') => {
-    setIsLoggedIn(true);
-    setUserRole(role);
+  const handleLogout = async () => {
+    await signOut();
     setIsMenuOpen(false);
   };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserRole(null);
+  
+  // Get user initials for avatar fallback
+  const getUserInitials = () => {
+    if (!profile?.name) return 'U';
+    return profile.name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
+
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md">
@@ -55,9 +70,38 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <Button onClick={handleLogout} className="ml-4 bg-transparent border border-gray-200 text-gray-700 hover:bg-gray-100">
-                  Logout
-                </Button>
+                <Link 
+                  to="/profile" 
+                  className="text-gray-700 dark:text-gray-300 hover:text-eduBlue-600 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Profile
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar>
+                        <AvatarImage src={profile?.avatarUrl} alt={profile?.name || 'User'} />
+                        <AvatarFallback className="bg-eduBlue-100 text-eduBlue-600">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{profile?.name || 'User'}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer w-full flex items-center">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 focus:text-red-500">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <>
@@ -108,13 +152,30 @@ const Navbar = () => {
               >
                 Dashboard
               </Link>
-              <button 
+              <Link 
+                to="/profile" 
+                className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Profile
+              </Link>
+              <div className="flex items-center px-3 py-2">
+                <Avatar className="h-8 w-8 mr-2">
+                  <AvatarImage src={profile?.avatarUrl} alt={profile?.name || 'User'} />
+                  <AvatarFallback className="bg-eduBlue-100 text-eduBlue-600">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-gray-700 dark:text-gray-300 font-medium">{profile?.name}</span>
+              </div>
+              <button
                 onClick={() => {
                   handleLogout();
                   setIsMenuOpen(false);
                 }}
-                className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 w-full text-left block px-3 py-2 rounded-md text-base font-medium"
+                className="w-full text-left text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center px-3 py-2 rounded-md text-base font-medium"
               >
+                <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </button>
             </>
